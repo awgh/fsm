@@ -1,0 +1,29 @@
+transitions:
+  - dst: $start
+    do:
+      - Howdy partner
+
+  - src: $start
+    dst: ask_name
+    on:
+      - hi
+      - hello
+    do:
+      - What's your name?
+
+  - src: $start
+    dst: ask_age
+    on:
+      - my name is
+      - I am
+    do:
+      - What's your age?
+
+  - src: ask_name
+    dst: ask_age
+    do:
+      - $$
+
+# no src means $any, no on means $any
+# $start -> start state
+# $$   -> last transition value 

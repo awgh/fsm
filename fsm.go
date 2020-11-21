@@ -1,0 +1,96 @@
+package fsm
+
+import (
+	"errors"
+	"io/ioutil"
+	"log"
+
+	"github.com/navossoc/bayesian"
+	"gopkg.in/yaml.v2"
+)
+
+// Load - makes a new finite state machine from the given config file
+func Load(path string) *FSM {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	var table TransitionTable
+	if err := yaml.Unmarshal(b, &table); err != nil {
+		panic(err)
+	}
+	return New(&table)
+}
+
+// New - makes a new finite state machine from the given config
+func New(table *TransitionTable) *FSM {
+
+	states := make(map[string]*State)
+	for _, transition := range table.Transitions {
+		srcState, ok := states[transition.Source]
+		if !ok {
+			srcState = &State{Name: transition.Source}
+			states[transition.Source] = srcState
+		}
+		dstState, ok := states[transition.Dest]
+		if !ok {
+			dstState = &State{Name: transition.Dest}
+			states[transition.Dest] = dstState
+		}
+
+		srcState.Classes = append(srcState.Classes, Class{
+			Name:   transition.Dest,
+			Values: transition.On,
+		})
+	}
+
+	for _, state := range states {
+		// classifier is only if there is more than one option,
+		// otherwise you know which state you're going to on any input
+		if len(state.Classes) > 1 {
+			var classes []bayesian.Class
+			for _, class := range state.Classes {
+				classes = append(classes, bayesian.Class(class.Name))
+			}
+			classifier := bayesian.NewClassifier(classes...)
+			for _, class := range state.Classes {
+				classifier.Learn(class.Values, bayesian.Class(class.Name))
+			}
+			log.Println("Loaded commands for classifier:")
+			for i, c := range classes {
+				log.Printf("%v\t%v\n", i, c)
+			}
+			state.Classifier = classifier
+		} else {
+			state.Classifier = nil
+		}
+	}
+	fsm := &FSM{Transitions: table, States: states}
+	fsm.Transition("$start")
+	return fsm
+}
+
+// Handle - process input and transition
+func (f *FSM) Handle(input string) error {
+
+	if f.State.Classifier != nil {
+		// todo: do I want underflow checking here or not?
+		probs, likely, _ := f.State.Classifier.ProbScores([]string{input})
+		log.Printf("prob scores: %+v %+v\n", probs, likely)
+
+		return f.Transition(f.State.Classes[likely].Name)
+	}
+	// only one place to go
+	return f.Transition(f.State.Classes[0].Name)
+}
+
+// Transition - transition to new state
+func (f *FSM) Transition(newState string) error {
+	if _, ok := f.States[newState]; !ok {
+		return errors.New("Unknown State, can't transition")
+	}
+	log.Println("Transitioning to ", newState)
+	f.State = f.States[newState]
+
+	return nil
+}
