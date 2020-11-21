@@ -2,6 +2,7 @@ package fsm
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 
@@ -86,11 +87,33 @@ func (f *FSM) Handle(input string) error {
 
 // Transition - transition to new state
 func (f *FSM) Transition(newState string) error {
+	prevState := ""
+	if f.State != nil {
+		prevState = f.State.Name
+	}
+
 	if _, ok := f.States[newState]; !ok {
 		return errors.New("Unknown State, can't transition")
 	}
 	log.Println("Transitioning to ", newState)
 	f.State = f.States[newState]
 
+	// Locate and run actions (do)
+	for _, t := range f.Transitions.Transitions {
+		if (t.Source == "" || t.Source == prevState) &&
+			(t.Dest == "" || t.Dest == newState) {
+			for _, s := range t.Do {
+				f.Eval(s)
+			}
+		}
+	}
+
+	return nil
+}
+
+// Eval - evaluate a script
+func (f *FSM) Eval(script string) error {
+
+	fmt.Println(script)
 	return nil
 }
