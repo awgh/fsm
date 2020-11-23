@@ -20,7 +20,7 @@ type Transition struct {
 	Dest   string `yaml:"dst"`
 
 	On []string `yaml:"on"`
-	Do []string `yaml:"do"`
+	Do []Call   `yaml:"do"`
 }
 
 // State - single state
@@ -34,4 +34,10 @@ type State struct {
 type Class struct {
 	Name   string
 	Values []string
+}
+
+// Call - call to a handler, name of handler and args
+type Call struct {
+	Name string   `yaml:"fn"`
+	Args []string `yaml:"args"`
 }

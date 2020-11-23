@@ -1,7 +1,9 @@
 transitions:
   - dst: $start
     do:
-      - Howdy partner
+      - fn: print
+        args: 
+          - Howdy partner
 
   - src: $start
     dst: ask_name
@@ -9,7 +11,9 @@ transitions:
       - hi
       - hello
     do:
-      - What's your name?
+      - fn: print
+        args:
+          - What's your name?
 
   - src: $start
     dst: ask_age
@@ -17,13 +21,17 @@ transitions:
       - my name is
       - I am
     do:
-      - What's your age?
+      - fn: print
+        args:
+          - What's your age?
 
   - src: ask_name
     dst: ask_age
     do:
-      - $$
+      - fn: print
+        args: 
+          - $$
 
-# no src means $any, no on means $any
+# no src means any, no on means any
 # $start -> start state
 # $$   -> last transition value 

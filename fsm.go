@@ -2,7 +2,6 @@ package fsm
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 
@@ -108,12 +107,5 @@ func (f *FSM) Transition(newState string) error {
 		}
 	}
 
-	return nil
-}
-
-// Eval - evaluate a script
-func (f *FSM) Eval(script string) error {
-
-	fmt.Println(script)
 	return nil
 }

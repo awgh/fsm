@@ -16,6 +16,6 @@ func main() {
 	log.Printf("%+v\n", fsm.Transitions)
 
 	//fsm.Handle("hi")
-	fsm.Handle("wrestler")
+	fsm.Handle("I am")
 
 }
