@@ -66,7 +66,7 @@ func New(table *TransitionTable) *FSM {
 		}
 	}
 	fsm := &FSM{Transitions: table, States: states}
-	fsm.Transition("$start")
+	fsm.Transition("$start", "")
 	return fsm
 }
 
@@ -78,14 +78,14 @@ func (f *FSM) Handle(input string) error {
 		probs, likely, _ := f.State.Classifier.ProbScores([]string{input})
 		log.Printf("prob scores: %+v %+v\n", probs, likely)
 
-		return f.Transition(f.State.Classes[likely].Name)
+		return f.Transition(f.State.Classes[likely].Name, input)
 	}
 	// only one place to go
-	return f.Transition(f.State.Classes[0].Name)
+	return f.Transition(f.State.Classes[0].Name, input)
 }
 
 // Transition - transition to new state
-func (f *FSM) Transition(newState string) error {
+func (f *FSM) Transition(newState string, input string) error {
 	prevState := ""
 	if f.State != nil {
 		prevState = f.State.Name
@@ -102,7 +102,7 @@ func (f *FSM) Transition(newState string) error {
 		if (t.Source == "" || t.Source == prevState) &&
 			(t.Dest == "" || t.Dest == newState) {
 			for _, s := range t.Do {
-				f.Eval(s)
+				f.Eval(s, input)
 			}
 		}
 	}

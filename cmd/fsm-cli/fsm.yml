@@ -5,12 +5,15 @@ transitions:
         args: 
           - Howdy partner
 
-  - src: $start
+  - src: ask_age
     dst: ask_name
     on:
       - hi
       - hello
     do:
+      - fn: print
+        args: 
+          - $$
       - fn: print
         args:
           - What's your name?
@@ -24,13 +27,7 @@ transitions:
       - fn: print
         args:
           - What's your age?
-
-  - src: ask_name
-    dst: ask_age
-    do:
-      - fn: print
-        args: 
-          - $$
+   
 
 # no src means any, no on means any
 # $start -> start state

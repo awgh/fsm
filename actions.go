@@ -32,11 +32,19 @@ func printHandler(args ...string) error {
 }
 
 // Eval - invoke an action with arguments
-func (f *FSM) Eval(call Call) error {
+func (f *FSM) Eval(call Call, input string) error {
 
 	action, ok := actionRegistry[call.Name]
 	if !ok {
 		return errors.New("Unknown Action: " + call.Name)
 	}
-	return action.Handler(call.Args...)
+	var args []string
+	for _, v := range call.Args {
+		if v == "$$" {
+			args = append(args, input)
+		} else {
+			args = append(args, v)
+		}
+	}
+	return action.Handler(args...)
 }

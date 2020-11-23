@@ -17,5 +17,5 @@ func main() {
 
 	//fsm.Handle("hi")
 	fsm.Handle("I am")
-
+	fsm.Handle("23")
 }
