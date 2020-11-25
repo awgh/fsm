@@ -60,6 +60,7 @@ func New(table *TransitionTable) *FSM {
 			for i, c := range classes {
 				log.Printf("%v\t%v\n", i, c)
 			}
+			//classifier.ConvertTermsFreqToTfIdf()
 			state.Classifier = classifier
 		} else {
 			state.Classifier = nil
@@ -78,10 +79,19 @@ func (f *FSM) Handle(input string) error {
 		probs, likely, _ := f.State.Classifier.ProbScores([]string{input})
 		log.Printf("prob scores: %+v %+v\n", probs, likely)
 
+		if probs[likely] <= 1.0/float64(len(probs)) {
+			// no real winner
+			return errors.New("Not sure what you're trying to say")
+		}
+
 		return f.Transition(f.State.Classes[likely].Name, input)
 	}
-	// only one place to go
-	return f.Transition(f.State.Classes[0].Name, input)
+	if len(f.State.Classes) > 0 {
+		// only one place to go
+		return f.Transition(f.State.Classes[0].Name, input)
+	}
+	// no place to go
+	return f.Transition("$start", input)
 }
 
 // Transition - transition to new state

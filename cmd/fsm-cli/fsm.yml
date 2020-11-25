@@ -5,14 +5,15 @@ transitions:
         args: 
           - Howdy partner
 
-  - src: ask_age
+  - src: $start
     dst: ask_name
     on:
       - hi
       - hello
     do:
       - fn: print
-        args: 
+        args:
+          - echo 
           - $$
       - fn: print
         args:
@@ -24,6 +25,10 @@ transitions:
       - my name is
       - I am
     do:
+      - fn: print
+        args: 
+          - echo
+          - $$
       - fn: print
         args:
           - What's your age?

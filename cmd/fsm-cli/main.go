@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -15,7 +16,11 @@ func main() {
 
 	log.Printf("%+v\n", fsm.Transitions)
 
+	if err := fsm.Handle("I am"); err != nil {
+		fmt.Println(err)
+	}
 	//fsm.Handle("hi")
-	fsm.Handle("I am")
-	fsm.Handle("23")
+	if err := fsm.Handle("23"); err != nil {
+		fmt.Println(err)
+	}
 }
