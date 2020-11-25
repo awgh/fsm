@@ -6,32 +6,52 @@ transitions:
           - Howdy partner
 
   - src: $start
-    dst: ask_name
+    dst: quiz1-1
     on:
-      - hi
-      - hello
+      - quiz
+      - test
     do:
-      - fn: print
+      - fn: newLog
+          - quiz1
+      - fn: printAndLog
         args:
-          - echo 
-          - $$
-      - fn: print
-        args:
-          - What's your name?
+          - quiz1
+          - Quiz Question Number One?
 
-  - src: $start
-    dst: ask_age
-    on:
-      - my name is
-      - I am
+  - src: quiz1-1
+    dst: quiz1-2
     do:
-      - fn: print
-        args: 
-          - echo
-          - $$
-      - fn: print
+      - fn: log
         args:
-          - What's your age?
+          - quiz1
+          - $$
+      - fn: printAndLog
+        args:
+          - quiz1
+          - Quiz Question Number Two?
+
+  - src: quiz1-2
+    dst: quiz1-3
+    do:
+      - fn: log
+        args:
+          - quiz1
+          - $$
+      - fn: printAndLog
+        args:
+          - quiz1
+          - Quiz Question Number Three?
+
+  - src: quiz1-3
+    dst: $start
+    do:
+      - fn: log
+        args:
+          - quiz1
+          - $$
+      - fn: printLog
+        args:
+          - quiz1
    
 
 # no src means any, no on means any
