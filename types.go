@@ -11,6 +11,7 @@ type FSM struct {
 
 // TransitionTable - main structure of FSM
 type TransitionTable struct {
+	Imports     []string     `yaml:"imports"`
 	Transitions []Transition `yaml:"transitions"`
 }
 

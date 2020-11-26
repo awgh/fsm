@@ -23,6 +23,11 @@ func init() {
 
 // Load - makes a new finite state machine from the given config file
 func Load(path string) *FSM {
+	table := loadFile(path)
+	return New(table)
+}
+
+func loadFile(path string) *TransitionTable {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
@@ -31,13 +36,19 @@ func Load(path string) *FSM {
 	if err := yaml.Unmarshal(b, &table); err != nil {
 		panic(err)
 	}
-	return New(&table)
+
+	for _, v := range table.Imports {
+		t := loadFile(v)
+		table.Transitions = append(table.Transitions, t.Transitions...)
+	}
+	return &table
 }
 
 // New - makes a new finite state machine from the given config
 func New(table *TransitionTable) *FSM {
 
 	states := make(map[string]*State)
+	states["$start"] = &State{Name: "$start"}
 	for _, transition := range table.Transitions {
 		srcState, ok := states[transition.Source]
 		if !ok {
@@ -66,7 +77,7 @@ func New(table *TransitionTable) *FSM {
 			}
 			classifier := bayesian.NewClassifier(classes...)
 			for _, class := range state.Classes {
-				classifier.Learn(class.Values, bayesian.Class(class.Name))
+				classifier.Learn(normalize(class.Values), bayesian.Class(class.Name))
 			}
 			log.Println("Loaded commands for classifier:")
 			for i, c := range classes {
@@ -88,7 +99,7 @@ func (f *FSM) Handle(input string) error {
 
 	if f.State.Classifier != nil {
 		// todo: do I want underflow checking here or not?
-		probs, likely, _ := f.State.Classifier.ProbScores([]string{input})
+		probs, likely, _ := f.State.Classifier.ProbScores(normalize([]string{input}))
 		log.Printf("prob scores: %+v %+v\n", probs, likely)
 
 		if probs[likely] <= 1.0/float64(len(probs)) {
@@ -139,7 +150,11 @@ func (f *FSM) Transition(newState string, input string) error {
 	return nil
 }
 
-func normalize(text string) string {
+func normalize(texts []string) []string {
 	//todo: handle unicode normalization
-	return strings.ToLower(normalizeRegexp.ReplaceAllString(text, ""))
+	var retval []string
+	for _, v := range texts {
+		retval = append(retval, strings.ToLower(normalizeRegexp.ReplaceAllString(v, "")))
+	}
+	return retval
 }
