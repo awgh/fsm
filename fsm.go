@@ -4,10 +4,22 @@ import (
 	"errors"
 	"io/ioutil"
 	"log"
+	"regexp"
+	"strings"
 
 	"github.com/navossoc/bayesian"
 	"gopkg.in/yaml.v2"
 )
+
+var normalizeRegexp *regexp.Regexp
+
+func init() {
+	reg, err := regexp.Compile("[^a-zA-Z0-9 ]+")
+	if err != nil {
+		log.Fatal(err)
+	}
+	normalizeRegexp = reg
+}
 
 // Load - makes a new finite state machine from the given config file
 func Load(path string) *FSM {
@@ -100,22 +112,34 @@ func (f *FSM) Transition(newState string, input string) error {
 	if f.State != nil {
 		prevState = f.State.Name
 	}
-
 	if _, ok := f.States[newState]; !ok {
 		return errors.New("Unknown State, can't transition")
 	}
 	log.Println("Transitioning to ", newState)
 	f.State = f.States[newState]
 
-	// Locate and run actions (do)
+	// Locate and run actions (do and once)
 	for _, t := range f.Transitions.Transitions {
 		if (t.Source == "" || t.Source == prevState) &&
 			(t.Dest == "" || t.Dest == newState) {
+
+			// run-once actions, if state has not been entered before
+			if !f.State.enteredAtLeastOnce {
+				for _, s := range t.Once {
+					f.Eval(s, input)
+				}
+			}
 			for _, s := range t.Do {
 				f.Eval(s, input)
 			}
 		}
 	}
+	f.State.enteredAtLeastOnce = true
 
 	return nil
+}
+
+func normalize(text string) string {
+	//todo: handle unicode normalization
+	return strings.ToLower(normalizeRegexp.ReplaceAllString(text, ""))
 }

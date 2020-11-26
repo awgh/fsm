@@ -1,6 +1,6 @@
 transitions:
   - dst: $start
-    do:
+    once:
       - fn: print
         args: 
           - Howdy partner

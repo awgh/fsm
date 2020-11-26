@@ -19,8 +19,9 @@ type Transition struct {
 	Source string `yaml:"src"`
 	Dest   string `yaml:"dst"`
 
-	On []string `yaml:"on"`
-	Do []Call   `yaml:"do"`
+	On   []string `yaml:"on"`
+	Do   []Call   `yaml:"do"`
+	Once []Call   `yaml:"once"`
 }
 
 // State - single state
@@ -28,6 +29,8 @@ type State struct {
 	Name       string
 	Classes    []Class
 	Classifier *bayesian.Classifier
+
+	enteredAtLeastOnce bool
 }
 
 // Class - named set of stings for classifier
