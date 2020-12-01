@@ -129,6 +129,8 @@ func (f *FSM) Transition(newState string, input string) (string, error) {
 	log.Println("Transitioning to ", newState)
 	f.State = f.States[newState]
 
+	var retval []string
+
 	// Locate and run actions (do and once)
 	for _, t := range f.Transitions.Transitions {
 		if (t.Source == "" || t.Source == prevState) &&
@@ -137,17 +139,27 @@ func (f *FSM) Transition(newState string, input string) (string, error) {
 			// run-once actions, if state has not been entered before
 			if !f.State.enteredAtLeastOnce {
 				for _, s := range t.Once {
-					f.Eval(s, input)
+					s, err := f.Eval(s, input)
+					if err == nil {
+						retval = append(retval, s)
+					} else {
+						retval = append(retval, err.Error())
+					}
 				}
 			}
 			for _, s := range t.Do {
-				f.Eval(s, input)
+				s, err := f.Eval(s, input)
+				if err == nil {
+					retval = append(retval, s)
+				} else {
+					retval = append(retval, err.Error())
+				}
 			}
 		}
 	}
 	f.State.enteredAtLeastOnce = true
 
-	return "", nil
+	return strings.Join(retval, "\n"), nil
 }
 
 func normalize(texts []string) []string {
