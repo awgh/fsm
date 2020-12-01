@@ -95,7 +95,7 @@ func New(table *TransitionTable) *FSM {
 }
 
 // Handle - process input and transition
-func (f *FSM) Handle(input string) error {
+func (f *FSM) Handle(input string) (string, error) {
 
 	if f.State.Classifier != nil {
 		// todo: do I want underflow checking here or not?
@@ -104,7 +104,7 @@ func (f *FSM) Handle(input string) error {
 
 		if probs[likely] <= 1.0/float64(len(probs)) {
 			// no real winner
-			return errors.New("Not sure what you're trying to say")
+			return "", errors.New("Not sure what you're trying to say")
 		}
 
 		return f.Transition(f.State.Classes[likely].Name, input)
@@ -118,13 +118,13 @@ func (f *FSM) Handle(input string) error {
 }
 
 // Transition - transition to new state
-func (f *FSM) Transition(newState string, input string) error {
+func (f *FSM) Transition(newState string, input string) (string, error) {
 	prevState := ""
 	if f.State != nil {
 		prevState = f.State.Name
 	}
 	if _, ok := f.States[newState]; !ok {
-		return errors.New("Unknown State, can't transition")
+		return "", errors.New("Unknown State, can't transition")
 	}
 	log.Println("Transitioning to ", newState)
 	f.State = f.States[newState]
@@ -147,7 +147,7 @@ func (f *FSM) Transition(newState string, input string) error {
 	}
 	f.State.enteredAtLeastOnce = true
 
-	return nil
+	return "", nil
 }
 
 func normalize(texts []string) []string {
