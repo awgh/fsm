@@ -12,6 +12,7 @@ transitions:
       - test
     do:
       - fn: newLog
+        args:
           - quiz1
       - fn: printAndLog
         args:
