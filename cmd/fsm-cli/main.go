@@ -1,7 +1,9 @@
 package main
 
 import (
-	"log"
+	"bufio"
+	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -9,23 +11,30 @@ import (
 )
 
 func main() {
-	//reader := bufio.NewReader(os.Stdin)
+	var yamlFile string
+	flag.StringVar(&yamlFile, "f", "fsm.yml", "YAML FSM Specification")
+
+	reader := bufio.NewReader(os.Stdin)
 	cwd, _ := os.Getwd()
-	fsm := fsm.Load(filepath.Join(cwd, "fsm.yml"))
+	sm := fsm.Load(filepath.Join(cwd, yamlFile))
 
-	log.Printf("%+v\n", fsm.Transitions)
+	//log.Printf("%+v\n", sm.Transitions)
 
-	fsm.Handle("hi")
-	fsm.Handle("Answer 1")
-	fsm.Handle("Answer 2")
-	fsm.Handle("Answer 3")
-	/*
-		if err := fsm.Handle("I am"); err != nil {
+	for {
+		fmt.Print("\n>")
+		line, err := reader.ReadString('\n')
+		if err != nil {
 			fmt.Println(err)
 		}
 
-		if err := fsm.Handle("23"); err != nil {
-			fmt.Println(err)
+		if fsm.Normalize([]string{line})[0] == "quit" {
+			break
 		}
-	*/
+		result, err := sm.Handle(line)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(result)
+		}
+	}
 }

@@ -50,6 +50,7 @@ func New(table *TransitionTable) *FSM {
 	states := make(map[string]*State)
 	states["$start"] = &State{Name: "$start"}
 	for _, transition := range table.Transitions {
+		// make sure all the states exist
 		srcState, ok := states[transition.Source]
 		if !ok {
 			srcState = &State{Name: transition.Source}
@@ -77,7 +78,7 @@ func New(table *TransitionTable) *FSM {
 			}
 			classifier := bayesian.NewClassifier(classes...)
 			for _, class := range state.Classes {
-				classifier.Learn(normalize(class.Values), bayesian.Class(class.Name))
+				classifier.Learn(Normalize(class.Values), bayesian.Class(class.Name))
 			}
 			log.Println("Loaded commands for classifier:")
 			for i, c := range classes {
@@ -99,7 +100,7 @@ func (f *FSM) Handle(input string) (string, error) {
 
 	if f.State.Classifier != nil {
 		// todo: do I want underflow checking here or not?
-		probs, likely, _ := f.State.Classifier.ProbScores(normalize([]string{input}))
+		probs, likely, _ := f.State.Classifier.ProbScores(Normalize([]string{input}))
 		log.Printf("prob scores: %+v %+v\n", probs, likely)
 
 		if probs[likely] <= 1.0/float64(len(probs)) {
@@ -130,9 +131,11 @@ func (f *FSM) Transition(newState string, input string) (string, error) {
 	f.State = f.States[newState]
 
 	var retval []string
+	autoState := ""
 
-	// Locate and run actions (do and once)
 	for _, t := range f.Transitions.Transitions {
+
+		// Locate and run actions (do and once)
 		if (t.Source == "" || t.Source == prevState) &&
 			(t.Dest == "" || t.Dest == newState) {
 
@@ -156,13 +159,28 @@ func (f *FSM) Transition(newState string, input string) (string, error) {
 				}
 			}
 		}
+
+		// determine if the state we're transitioning into is an automatic transfer to another state
+		if t.Source == newState && t.Auto {
+			autoState = t.Dest
+			log.Println("Auto Transision Detected: ", newState, t.Dest)
+		}
 	}
 	f.State.enteredAtLeastOnce = true
-
+	if autoState != "" {
+		// to avoid classifier collisions, automatic states must be used in some cases
+		s, err := f.Transition(autoState, "")
+		if err == nil {
+			retval = append(retval, s)
+		} else {
+			retval = append(retval, err.Error())
+		}
+	}
 	return strings.Join(retval, "\n"), nil
 }
 
-func normalize(texts []string) []string {
+// Normalize text for FSM processing
+func Normalize(texts []string) []string {
 	//todo: handle unicode normalization
 	var retval []string
 	for _, v := range texts {

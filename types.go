@@ -20,6 +20,7 @@ type Transition struct {
 	Source string `yaml:"src"`
 	Dest   string `yaml:"dst"`
 
+	Auto bool     `yaml:"auto"`
 	On   []string `yaml:"on"`
 	Do   []Call   `yaml:"do"`
 	Once []Call   `yaml:"once"`

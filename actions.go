@@ -2,7 +2,6 @@ package fsm
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -36,7 +35,6 @@ func RegisterAction(action Action) {
 }
 
 func printHandler(args ...string) (string, error) {
-	fmt.Println(args)
 	return strings.Join(args, " "), nil
 }
 
@@ -53,7 +51,6 @@ func printAndLogHandler(args ...string) (string, error) {
 		return "", errors.New("Not enough arguments for printAndLog, needs log name")
 	}
 	logs[args[0]] = append(logs[args[0]], args[1:]...)
-	fmt.Println(args[1:])
 	return strings.Join(args[1:], " "), nil
 }
 
@@ -70,7 +67,6 @@ func printLogHandler(args ...string) (string, error) {
 		return "", errors.New("Not enough arguments for printLog, needs log name")
 	}
 	s := strings.Join(logs[args[0]], "\n")
-	fmt.Println(s)
 	return s, nil
 }
 
